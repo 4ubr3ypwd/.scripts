@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # Clears the DNS cache
-killall -HUP mDNSResponder
+sudo killall -HUP mDNSResponder

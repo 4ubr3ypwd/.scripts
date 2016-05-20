@@ -1,14 +1,15 @@
 <?php
 
-/**
- * Apache
+/*
+ * APACHE
  */
 
+// Example.
 $eg = "sudo php {$argv[0]} add|rm example.dev [custom xampp file location; optional]"; // Example how to use.
 
 // Vars
-$action = ( ( $argv[1] != 'rm' && $argv[1] != 'add' ) || ! isset( $argv[1] ) ) ? false : $argv[1];
-$domain = isset( $argv[2] ) ? $argv[2] : false;
+$action            = ( ( $argv[1] != 'rm' && $argv[1] != 'add' ) || ! isset( $argv[1] ) ) ? false : $argv[1];
+$domain            = isset( $argv[2] ) ? $argv[2] : false;
 $custom_vhost_file = isset( $argv[3] ) ? $argv[3] : false;
 
 // Requirements
@@ -20,11 +21,11 @@ if ( ! stristr( $domain, '.dev' ) ) {
 	die( "Please add a .dev domain." );
 }
 
-ob_start();
-
-?>
+// Start virtual host output.
+ob_start(); ?>
 
 # <?php echo "$domain\n"; ?>
+
 <VirtualHost *:80>
 	ServerName <?php echo $domain; ?>
 
@@ -43,39 +44,63 @@ ob_start();
 
 <?php
 
-$vhost_text = ob_get_contents(); // vhost to add
-$vhosts_file = $custom_vhost_file ? $custom_vhost_file : "/Applications/XAMPP/xamppfiles/etc/extra/httpd-vhosts.conf";  // XAMPP vhost file
+/*
+ * VHOSTS
+ */
+
+$vhost_text           = ob_get_contents(); // vhost to add
+$vhosts_file          = $custom_vhost_file ? $custom_vhost_file : "/Applications/XAMPP/xamppfiles/etc/extra/httpd-vhosts.conf";  // XAMPP vhost file
 $vhosts_file_contents = file_get_contents( $vhosts_file ); // get vhosts file contents
 
+// Remove.
 if ( 'rm' == $action ) {
 	$vhosts_file_contents = str_replace( $vhost_text, '', $vhosts_file_contents );
 }
 
+// Add.
 if ( 'add' == $action ) {
 	if ( stristr( $vhosts_file_contents, $vhost_text ) ) {
 		die( "That domain is already there." );
 	}
 
 	$vhosts_file_contents .= $vhost_text;
+
+	/*
+	 * DATABASE
+	 */
+	shell_exec( "php add-db.php $domain" );
 }
 
+// Write contents.
 file_put_contents( $vhosts_file, $vhosts_file_contents );
 
+// Restart XAMPP.
 shell_exec( "sudo xampp restart" );
 
-/**
- * hosts File
+/*
+ * HOSTS FILE
  */
+
 $hosts_file = "/etc/hosts";
 $hosts_file_contents = file_get_contents( $hosts_file );
 $host_line = "\n127.0.0.1 $domain";
 
+// Add.
 if ( 'add' == $action ) {
 	$hosts_file_contents .= $host_line;
 }
 
+// Remove.
 if ( 'rm' == $action ) {
 	$hosts_file_contents = str_replace( $host_line, '', $vhosts_file_contents );
 }
 
+// Write the file.
 file_put_contents( $hosts_file, $hosts_file_contents );
+
+/*
+ * FILES
+ */
+
+// Create the folder in HTDOCS folder.
+shell_exec( "mkdir /Applications/XAMPP/xamppfiles/htdocs/$domain" );

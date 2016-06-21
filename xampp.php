@@ -97,10 +97,3 @@ if ( 'rm' == $action ) {
 
 // Write the file.
 file_put_contents( $hosts_file, $hosts_file_contents );
-
-/*
- * FILES
- */
-
-// Create the folder in HTDOCS folder.
-shell_exec( "mkdir /Applications/XAMPP/xamppfiles/htdocs/$domain" );
